@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Tablas y vistas</title>
+    <style>
+        table {
+            width: 80%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 5px;
+            text-align: left;
+        }
+        th:nth-child(-n+3), td:nth-child(-n+3) {
+            width: 15%;
+        }
+        th:nth-child(4), td:nth-child(4) {
+            width: 55%;
+        }
+    </style>
+</head>
+<body>
+<th:block th:each="tabla : ${tablas}">
+    <table>
+        <tr>
+            <td colspan="4" th:text="${tabla.nombre + ' (' + tabla.tipo + ')'}"></td>
+        </tr>
+        <tr>
+            <th>campo</th>
+            <th>tipo</th>
+            <th>longitud</th>
+            <th>descripcion</th>
+        </tr>
+        <tr th:each="campo : ${tabla.campos}">
+            <td th:text="${campo.nombre}"></td>
+            <td th:text="${campo.tipo}"></td>
+            <td th:text="${campo.longitud}"></td>
+            <td th:text="${campo.descripcion}"></td>
+        </tr>
+    </table>
+    <br>
+</th:block>
+</body>
+</html>
