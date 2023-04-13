@@ -22,8 +22,9 @@
     </style>
 </head>
 <body>
+<h3>Diccionario de datos</h3>
 <th:block th:each="entry : ${tablas}">
-    <h3 th:text="${entry.key}"></h3>
+    <h3 th:text="${'Base de datos : ' + entry.key}"></h3>
     <th:block th:each="tabla : ${entry.value}">
         <table>
             <tr>

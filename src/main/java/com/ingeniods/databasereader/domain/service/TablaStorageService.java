@@ -13,4 +13,6 @@ public interface TablaStorageService {
 
     Map<String, List<TablaInfo>> getAllTablasByApplication(String application);
 
+    void deleteTablasByApplicationAndSchema(String application, String schema);
+
 }

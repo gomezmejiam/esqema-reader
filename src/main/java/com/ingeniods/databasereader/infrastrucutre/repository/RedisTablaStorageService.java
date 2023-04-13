@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingeniods.databasereader.domain.entity.TablaInfo;
 import com.ingeniods.databasereader.domain.service.TablaStorageService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
@@ -14,12 +14,12 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@AllArgsConstructor
 public class RedisTablaStorageService implements TablaStorageService {
 
-    @Autowired
-    private Jedis jedis;
+    private final Jedis jedis;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     @Override
     public void storeTablas(String application, String module, List<TablaInfo> tablas) {
@@ -39,7 +39,8 @@ public class RedisTablaStorageService implements TablaStorageService {
 
         if (jsonResult != null) {
             try {
-                return objectMapper.readValue(jsonResult, new TypeReference<List<TablaInfo>>() {});
+                return objectMapper.readValue(jsonResult, new TypeReference<List<TablaInfo>>() {
+                });
             } catch (IOException e) {
                 throw new RuntimeException("Error al deserializar el listado de tablas", e);
             }
@@ -58,7 +59,8 @@ public class RedisTablaStorageService implements TablaStorageService {
 
             if (jsonResult != null) {
                 try {
-                    List<TablaInfo> tablas = objectMapper.readValue(jsonResult, new TypeReference<List<TablaInfo>>() {});
+                    List<TablaInfo> tablas = objectMapper.readValue(jsonResult, new TypeReference<List<TablaInfo>>() {
+                    });
                     resultMap.put(schema, tablas);
                 } catch (IOException e) {
                     throw new RuntimeException("Error al deserializar el listado de tablas", e);
@@ -67,5 +69,11 @@ public class RedisTablaStorageService implements TablaStorageService {
         }
 
         return resultMap;
+    }
+
+    @Override
+    public void deleteTablasByApplicationAndSchema(String application, String schema) {
+        String redisKey = application + "_" + schema;
+        jedis.del(redisKey);
     }
 }

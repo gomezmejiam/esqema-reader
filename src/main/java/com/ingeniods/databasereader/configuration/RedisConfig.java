@@ -10,6 +10,7 @@ public class RedisConfig {
 
     @Value("${redis.host}")
     private String redisHost;
+
     @Bean
     public Jedis jedis() {
         return new Jedis(redisHost);

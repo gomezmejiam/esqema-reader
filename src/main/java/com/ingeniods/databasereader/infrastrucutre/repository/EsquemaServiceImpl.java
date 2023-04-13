@@ -1,5 +1,11 @@
 package com.ingeniods.databasereader.infrastrucutre.repository;
 
+import com.ingeniods.databasereader.domain.entity.CampoInfo;
+import com.ingeniods.databasereader.domain.entity.TablaInfo;
+import com.ingeniods.databasereader.domain.service.EsquemaService;
+import com.ingeniods.databasereader.shared.exception.EsquemaInfoException;
+import org.springframework.stereotype.Service;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -9,14 +15,33 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.ingeniods.databasereader.shared.exception.EsquemaInfoException;
-import com.ingeniods.databasereader.domain.entity.CampoInfo;
-import com.ingeniods.databasereader.domain.entity.TablaInfo;
-import com.ingeniods.databasereader.domain.service.EsquemaService;
-import org.springframework.stereotype.Service;
-
 @Service
 public class EsquemaServiceImpl implements EsquemaService {
+
+    private static List<CampoInfo> readCampoInfos(String schema, Connection connection, DatabaseMetaData metaData, String tableName) throws SQLException {
+        List<CampoInfo> campos = new ArrayList<>();
+        try (ResultSet columnsResultSet = metaData.getColumns(connection.getCatalog(), schema, tableName, null)) {
+            while (columnsResultSet.next()) {
+                CampoInfo campoInfo = readCampoInfo(columnsResultSet);
+                campos.add(campoInfo);
+            }
+        }
+        return campos;
+    }
+
+    private static CampoInfo readCampoInfo(ResultSet columnsResultSet) throws SQLException {
+        String columnName = columnsResultSet.getString("COLUMN_NAME");
+        String columnType = columnsResultSet.getString("TYPE_NAME");
+        String columnDescription = columnsResultSet.getString("REMARKS");
+        String longitud = String.valueOf(columnsResultSet.getInt("COLUMN_SIZE"));
+
+        if ("DECIMAL".equalsIgnoreCase(columnType) || "NUMERIC".equalsIgnoreCase(columnType)) {
+            Integer decimalDigits = columnsResultSet.getInt("DECIMAL_DIGITS");
+            longitud = longitud+","+decimalDigits;
+        }
+        CampoInfo campoInfo = new CampoInfo(columnName, columnType, columnDescription, longitud);
+        return campoInfo;
+    }
 
     @Override
     public List<TablaInfo> getEsquemaInfo(String url, String username, String password, String schema) {
@@ -42,32 +67,6 @@ public class EsquemaServiceImpl implements EsquemaService {
             throw new EsquemaInfoException("Error al consultar la estructura del esquema", e);
         }
     }
-
-    private static List<CampoInfo> readCampoInfos(String schema, Connection connection, DatabaseMetaData metaData, String tableName) throws SQLException {
-        List<CampoInfo> campos = new ArrayList<>();
-        try (ResultSet columnsResultSet = metaData.getColumns(connection.getCatalog(), schema, tableName, null)) {
-            while (columnsResultSet.next()) {
-                CampoInfo campoInfo = readCampoInfo(columnsResultSet);
-                campos.add(campoInfo);
-            }
-        }
-        return campos;
-    }
-
-    private static CampoInfo readCampoInfo(ResultSet columnsResultSet) throws SQLException {
-        String columnName = columnsResultSet.getString("COLUMN_NAME");
-        String columnType = columnsResultSet.getString("TYPE_NAME");
-        String columnDescription = columnsResultSet.getString("REMARKS");
-        String longitud = String.valueOf(columnsResultSet.getInt("COLUMN_SIZE"));
-
-        if ("DECIMAL".equalsIgnoreCase(columnType) || "NUMERIC".equalsIgnoreCase(columnType)) {
-            Integer decimalDigits = columnsResultSet.getInt("DECIMAL_DIGITS");
-            longitud = String.format("%d,%d", longitud, decimalDigits);
-        }
-        CampoInfo campoInfo = new CampoInfo(columnName, columnType, columnDescription, longitud);
-        return campoInfo;
-    }
-
 
     @Override
     public List<String> getEsquemas(String url, String username, String password) {
